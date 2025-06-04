@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+crewai
+python-multipart
+python-docx
+PyPDF2
+chromadb
+sentence-transformers
+groq
+pydantic
+langchain==0.3
+langchain-community
+crewai_tools
