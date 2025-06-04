@@ -11,3 +11,4 @@ pydantic
 langchain==0.3
 langchain-community
 crewai_tools
+streamlit
