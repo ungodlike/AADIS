@@ -1,15 +1,14 @@
 import chromadb
-#from chromadb.config import Settings
 import uuid
 from typing import Dict, List, Any
 import json
 
 class KnowledgeBase:
     def __init__(self, persist_directory: str = "./chroma_db"):
-        # Initialize ChromaDB
+        #init chroma
         self.client = chromadb.PersistentClient(path=persist_directory)
         
-        # Create collections
+        #make collections
         self.text_collection = self.client.get_or_create_collection(
             name="document_texts",
             metadata={"description": "Text chunks from documents"}
@@ -20,14 +19,14 @@ class KnowledgeBase:
             metadata={"description": "Tables from documents"}
         )
         
-        # Document metadata storage
+        #stor doc metadata
         self.documents = {}
     
     def store_document(self, filename: str, extracted_data: Dict[str, Any]) -> str:
         """Store extracted document data in vector database"""
         doc_id = str(uuid.uuid4())
         
-        # Store text chunks
+        #store text chunks
         if extracted_data.get("text_chunks"):
             text_ids = []
             text_documents = []
@@ -50,7 +49,7 @@ class KnowledgeBase:
                 metadatas=text_metadata
             )
         
-        # Store tables
+        #store tables
         if extracted_data.get("tables"):
             table_ids = []
             table_documents = []
@@ -60,7 +59,7 @@ class KnowledgeBase:
                 table_id = f"{doc_id}_table_{i}"
                 table_ids.append(table_id)
                 
-                # Convert table to searchable text
+                #table to searchable text
                 table_text = self._table_to_text(table)
                 table_documents.append(table_text)
                 table_metadatas.append({
@@ -77,7 +76,7 @@ class KnowledgeBase:
                 metadatas=table_metadatas
             )
         
-        # Store document metadata
+        #store doc metadata
         self.documents[doc_id] = {
             "filename": filename,
             "text_chunks": len(extracted_data.get("text_chunks", [])),
@@ -141,19 +140,19 @@ class KnowledgeBase:
     
     def delete_document(self, doc_id: str):
         """Delete a document and its associated data"""
-        # Delete from collections
+        #delete doc
         try:
-            # Get all text chunks for this document
+            #get all text chunks for one doc
             text_results = self.text_collection.get(where={"document_id": doc_id})
             if text_results["ids"]:
                 self.text_collection.delete(ids=text_results["ids"])
             
-            # Get all tables for this document  
+            #get all tables for one doc 
             table_results = self.table_collection.get(where={"document_id": doc_id})
             if table_results["ids"]:
                 self.table_collection.delete(ids=table_results["ids"])
             
-            # Remove from documents metadata
+            #remove from doc metadata
             if doc_id in self.documents:
                 del self.documents[doc_id]
                 
@@ -167,14 +166,14 @@ class KnowledgeBase:
         
         text_parts = []
         if "data" in table and table["data"]:
-            # Assume first row might be headers
+            #assuming first row might be headers
             data = table["data"]
             if data:
                 headers = data[0]
                 text_parts.append("Table headers: " + " | ".join(headers))
                 
-                # Add some sample rows
-                for row in data[1:min(4, len(data))]:  # First 3 data rows
+                #adding sample rows
+                for row in data[1:min(4, len(data))]:  #first 3 data rows
                     text_parts.append(" | ".join(str(cell) for cell in row))
         
         return "\n".join(text_parts)
