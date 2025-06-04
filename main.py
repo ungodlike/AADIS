@@ -9,9 +9,9 @@ from my_doc_agents import DocumentProcessingCrew
 from my_qa_agents import QACrew
 from knowledge_base import KnowledgeBase
 
-app = FastAPI(title="Document Intelligence System")
+app = FastAPI(title="AADIS")
 
-# Initialize components
+#init 
 kb = KnowledgeBase()
 doc_crew = DocumentProcessingCrew()
 qa_crew = QACrew(kb)
@@ -23,17 +23,17 @@ async def upload_documents(files: List[UploadFile] = File(...)):
         results = []
         
         for file in files:
-            # Save uploaded file temporarily
+            #temp file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as temp_file:
                 content = await file.read()
                 temp_file.write(content)
                 temp_file_path = temp_file.name
             
             try:
-                # Process document using agents
+                #process documents 
                 extracted_data = doc_crew.process_document(temp_file_path, file.filename)
                 
-                # Store in knowledge base
+                #storing processed docs in kb 
                 doc_id = kb.store_document(file.filename, extracted_data)
                 
                 results.append({
@@ -44,7 +44,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
                 })
                 
             finally:
-                # Clean up temp file
+                #flush temp
                 os.unlink(temp_file_path)
         
         return JSONResponse(content={"status": "success", "processed_documents": results})
@@ -58,9 +58,9 @@ async def ask_question(question: dict):
     try:
         user_question = question.get("question", "")
         if not user_question:
-            raise HTTPException(status_code=400, detail="Question is required")
+            raise HTTPException(status_code=400, detail="Ask a question")
         
-        # Process question using QA agents
+        #process question using QA agents
         answer = qa_crew.answer_question(user_question)
         
         return JSONResponse(content={
