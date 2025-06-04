@@ -4,8 +4,9 @@ import PyPDF2
 from docx import Document
 import json
 from typing import Dict, List, Any
-import re
-import os
+
+#text + table extraction for docx, only text extraction for pdf
+#since only text is working for pdf tables so far based on my tests
 
 class DocumentParsingTools:
     @staticmethod
@@ -58,13 +59,12 @@ class DocumentParsingTools:
 
 class DocumentProcessingCrew:
     def __init__(self):
-        # Initialize Groq LLM
         self.llm = LLM(model="groq/llama-3.3-70b-versatile")
-        # Initialize tools
+        #init tools
         self.file_read_tool = FileReadTool()
         self.doc_tools = DocumentParsingTools()
         
-        # Create agents
+        #text, table extraction agents
         self.text_extraction_agent = Agent(
             role="Text Extraction Specialist",
             goal="Extract and structure text content from documents with high accuracy",
@@ -87,17 +87,18 @@ class DocumentProcessingCrew:
         """Process a document using specialized agents"""
         file_extension = filename.lower().split('.')[-1]
         
-        # Extract raw content based on file type
+        #file based text extraction
         if file_extension == 'pdf':
             raw_text = self.doc_tools.extract_text_from_pdf(file_path)
-            tables = []  # Basic PDF table extraction would need additional libraries
+            tables = []  #work on this!
         elif file_extension == 'docx':
             raw_text = self.doc_tools.extract_text_from_docx(file_path)
             tables = self.doc_tools.extract_tables_from_docx(file_path)
         else:
             raise ValueError(f"Unsupported file format: {file_extension}")
         
-        # Create tasks for agents
+        #text extract and table analysis tasks
+        #still testing chunk size
         text_extraction_task = Task(
             description=f"""
             Analyze and structure the following text content from document '{filename}':
@@ -107,7 +108,7 @@ class DocumentProcessingCrew:
             Your tasks:
             1. Clean and structure the text
             2. Identify key sections and headings
-            3. Break text into meaningful chunks (max 500 words each)
+            3. Break text into meaningful chunks (max 250 words each) 
             4. Extract key information and metadata
             
             Return structured JSON with text_chunks, sections, and metadata.
@@ -126,6 +127,7 @@ class DocumentProcessingCrew:
             Your tasks:
             1. Analyze each table structure
             2. Identify headers and data types
+            3. Look for captions if any
             3. Create meaningful descriptions for each table
             4. Structure data for easy querying
             
@@ -135,7 +137,6 @@ class DocumentProcessingCrew:
             expected_output="JSON formatted table analysis with structure and descriptions"
         )
         
-        # Create and run crew
         crew = Crew(
             agents=[self.text_extraction_agent, self.table_extraction_agent],
             tasks=[text_extraction_task, table_analysis_task],
@@ -144,9 +145,9 @@ class DocumentProcessingCrew:
         
         result = crew.kickoff()
         
-        # Process and structure results
+        #process end results
         try:
-            # Split text into chunks for vector storage
+            #chunks for vector storage
             text_chunks = self._chunk_text(raw_text)
             
             return {
@@ -157,7 +158,7 @@ class DocumentProcessingCrew:
                 "agent_analysis": str(result)
             }
         except Exception as e:
-            # Fallback processing
+            #fallback
             return {
                 "filename": filename,
                 "text_chunks": self._chunk_text(raw_text),
