@@ -1,5 +1,4 @@
 from crewai import Agent, Task, Crew, LLM
-import os
 from typing import Dict, Any, List
 
 class QACrew:
@@ -7,12 +6,11 @@ class QACrew:
         self.kb = knowledge_base
         self.llm = LLM(model="groq/llama-3.3-70b-versatile")
         
-        # Create QA agents
         self.supervisor_agent = Agent(
             role="Question Analysis Supervisor",
             goal="Analyze user questions and determine the best approach to answer them",
             backstory="You are an intelligent supervisor who understands user intent and coordinates different specialists to provide comprehensive answers.",
-            verbose=True,
+            verbose=False,
             allow_delegation=True,
             llm=self.llm
         )
@@ -20,8 +18,9 @@ class QACrew:
         self.text_retrieval_agent = Agent(
             role="Text Information Retrieval Specialist",
             goal="Find and synthesize relevant text information to answer user questions",
-            backstory="You specialize in searching through text content and documents to find relevant information and provide 'to the point' answers based on textual content." \
-            "Do not generate an answer based on your knowledge but only based on the document context, ideally in similar language",
+            backstory="You specialize in searching through text content and documents to find relevant information and provide strictly 'to the point' answers based on textual context." \
+                      "Do not generate an answer based on your knowledge but only based on the document context, ideally in similar language."\
+                      "Do not write any code or perform any mathematics if the context is scientific.",
             verbose=False,
             allow_delegation=False,
             llm=self.llm
@@ -39,11 +38,11 @@ class QACrew:
     def answer_question(self, question: str) -> Dict[str, Any]:
         """Process user question using appropriate agents"""
         
-        # Determine question type and retrieve relevant data
+        #using text/tables depending on the question
         relevant_texts = self.kb.search_text(question, limit=5)
         relevant_tables = self.kb.search_tables(question, limit=3)
         
-        # Create supervisor task to analyze question
+        #supervisor task
         supervisor_task = Task(
             description=f"""
             Analyze this user question: "{question}"
@@ -63,7 +62,7 @@ class QACrew:
             expected_output="Analysis plan specifying which agents to use and what information to focus on"
         )
         
-        # Create text retrieval task
+        #text retrieval task
         text_task = Task(
             description=f"""
             Answer this question using text information: "{question}"
@@ -77,7 +76,7 @@ class QACrew:
             expected_output="'To the point' answer based on text analysis"
         )
         
-        # Create table analysis task
+        #table analysis task
         table_task = Task(
             description=f"""
             Answer this question using table/data analysis: "{question}"
@@ -91,7 +90,7 @@ class QACrew:
             expected_output="Data-driven answer based on table analysis"
         )
         
-        # Create crew and execute
+        #final crew for qa
         crew = Crew(
             agents=[self.supervisor_agent, self.text_retrieval_agent, self.table_analysis_agent],
             tasks=[supervisor_task, text_task, table_task],
@@ -100,7 +99,7 @@ class QACrew:
         
         result = crew.kickoff()
         
-        # Determine which agent was most relevant
+        #test code for agent check, using based on needs
         agent_used = "combined"
         if len(relevant_texts) > len(relevant_tables):
             agent_used = "text_retrieval"
@@ -122,7 +121,7 @@ class QACrew:
             return "No relevant text found."
         
         formatted = ""
-        for i, chunk in enumerate(text_chunks[:3]):  # Limit to top 3
+        for i, chunk in enumerate(text_chunks[:3]):  #limit top 3
             formatted += f"Text {i+1} (from {chunk['filename']}):\n{chunk['content']}\n\n"
         return formatted
     
@@ -132,7 +131,7 @@ class QACrew:
             return "No relevant tables found."
         
         formatted = ""
-        for i, table in enumerate(tables[:2]):  # Limit to top 2
+        for i, table in enumerate(tables[:2]):  #limit top 2
             formatted += f"Table {i+1} (from {table['filename']}):\n"
             formatted += f"Description: {table.get('description', 'N/A')}\n"
             formatted += f"Data: {table['data']}\n\n"
