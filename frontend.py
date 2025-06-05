@@ -29,9 +29,12 @@ def upload_documents(files):
 def ask_question(question: str):
     """question to FastAPI backend"""
     try:
+
+        cleaned_question = ' '.join(question.split()) #json newline error handling debug
+
         response = requests.post(
             f"{BACKEND_URL}/ask-question/",
-            json={"question": question},
+            json={"question": cleaned_question},
             headers={"Content-Type": "application/json"}
         )
         return response.json()
@@ -186,6 +189,16 @@ def main():
                             agent_used = result.get("agent_used", "")
                             if agent_used:
                                 st.caption(f"🤖 Answered by: {agent_used}")
+
+                            #store in history
+                            if "qa_history" not in st.session_state:
+                                st.session_state.qa_history = []
+                            
+                            st.session_state.qa_history.append({
+                                "question": question.strip(),
+                                "answer": result.get("answer", "No answer provided"),
+                                "sources": sources
+                            })
             
             #this is ai generated for visual pleasing (chat history)
             if "qa_history" not in st.session_state:
