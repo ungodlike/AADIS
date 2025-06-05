@@ -23,7 +23,7 @@ class KnowledgeBase:
         self.documents = {}
     
     def store_document(self, filename: str, extracted_data: Dict[str, Any]) -> str:
-        """Store extracted document data in vector database"""
+        """store extracted document data in vectordb"""
         doc_id = str(uuid.uuid4())
         
         #store text chunks
@@ -81,13 +81,13 @@ class KnowledgeBase:
             "filename": filename,
             "text_chunks": len(extracted_data.get("text_chunks", [])),
             "tables": len(extracted_data.get("tables", [])),
-            "created_at": str(uuid.uuid4())  # Placeholder timestamp
+            "created_at": str(uuid.uuid4())  #placeholder timestamp
         }
         
         return doc_id
     
     def search_text(self, query: str, limit: int = 5) -> List[Dict]:
-        """Search for relevant text chunks"""
+        """search for relevant text chunks"""
         try:
             results = self.text_collection.query(
                 query_texts=[query],
@@ -110,7 +110,7 @@ class KnowledgeBase:
             return []
     
     def search_tables(self, query: str, limit: int = 3) -> List[Dict]:
-        """Search for relevant tables"""
+        """search for relevant tables"""
         try:
             results = self.table_collection.query(
                 query_texts=[query],
@@ -135,11 +135,11 @@ class KnowledgeBase:
             return []
     
     def list_documents(self) -> List[Dict]:
-        """List all stored documents"""
+        """list all stored documents"""
         return list(self.documents.values())
     
     def delete_document(self, doc_id: str):
-        """Delete a document and its associated data"""
+        """delete a document and its data"""
         #delete doc
         try:
             #get all text chunks for one doc
@@ -160,7 +160,7 @@ class KnowledgeBase:
             raise Exception(f"Error deleting document: {e}")
     
     def _table_to_text(self, table: Dict) -> str:
-        """Convert table data to searchable text"""
+        """convert table data to searchable text"""
         if "error" in table:
             return table["error"]
         
