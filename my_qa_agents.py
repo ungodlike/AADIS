@@ -5,7 +5,9 @@ class QACrew:
     def __init__(self, knowledge_base):
         self.kb = knowledge_base
         self.llm = LLM(model="groq/llama-3.3-70b-versatile")
-        
+
+        #self.visionllm = LLM(model="groq/meta-llama/llama-4-scout-17b-16e-instruct")
+
         self.supervisor_agent = Agent(
             role="Question Analysis Supervisor",
             goal="Analyze user questions and determine the best approach to answer them",
@@ -19,8 +21,8 @@ class QACrew:
             role="Text Information Retrieval Specialist",
             goal="Find and synthesize relevant text information to answer user questions",
             backstory="You specialize in searching through text content and documents to find relevant information and provide strictly 'to the point' answers based on textual context." \
-                      "Do not generate an answer based on your knowledge but only based on the document context, ideally in similar language."\
-                      "Do not write any code or perform any mathematics if the context is scientific.",
+                      "You do not generate an answer based on your knowledge but only based on the document context, ideally in similar language."\
+                      "You do not write any code or perform any mathematics if the context is scientific. You respond only based on the provided context.",
             verbose=False,
             allow_delegation=False,
             llm=self.llm
@@ -36,7 +38,7 @@ class QACrew:
         )
     
     def answer_question(self, question: str) -> Dict[str, Any]:
-        """Process user question using appropriate agents"""
+        """answer question using appropriate agents"""
         
         #using text/tables depending on the question
         relevant_texts = self.kb.search_text(question, limit=5)
@@ -116,7 +118,7 @@ class QACrew:
         }
     
     def _format_text_chunks(self, text_chunks: List[Dict]) -> str:
-        """Format text chunks for agent processing"""
+        """format text chunks for agent processing"""
         if not text_chunks:
             return "No relevant text found."
         
@@ -126,7 +128,7 @@ class QACrew:
         return formatted
     
     def _format_tables(self, tables: List[Dict]) -> str:
-        """Format tables for agent processing"""
+        """format tables for agent processing"""
         if not tables:
             return "No relevant tables found."
         
