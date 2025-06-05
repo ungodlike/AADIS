@@ -62,7 +62,7 @@ def delete_document(doc_id: str):
 
 #main app
 def main():
-    st.title("📚 Document Intelligence System")
+    st.title("📚 AADIS")
     st.markdown("Upload documents and ask questions about their content using AI agents.")
     
     #sidebar for document management
