@@ -11,7 +11,7 @@ from typing import Dict, List, Any
 class DocumentParsingTools:
     @staticmethod
     def extract_text_from_pdf(file_path: str) -> str:
-        """Extract text from PDF file"""
+        """extract text from PDF file"""
         try:
             with open(file_path, 'rb') as file:
                 pdf_reader = PyPDF2.PdfReader(file)
@@ -24,7 +24,7 @@ class DocumentParsingTools:
     
     @staticmethod
     def extract_text_from_docx(file_path: str) -> str:
-        """Extract text from DOCX file"""
+        """extract text from DOCX file"""
         try:
             doc = Document(file_path)
             text = ""
@@ -36,7 +36,7 @@ class DocumentParsingTools:
     
     @staticmethod
     def extract_tables_from_docx(file_path: str) -> List[Dict]:
-        """Extract tables from DOCX file"""
+        """extract tables from DOCX file"""
         try:
             doc = Document(file_path)
             tables = []
@@ -84,7 +84,7 @@ class DocumentProcessingCrew:
         )
     
     def process_document(self, file_path: str, filename: str) -> Dict[str, Any]:
-        """Process a document using specialized agents"""
+        """process document using agents"""
         file_extension = filename.lower().split('.')[-1]
         
         #file based text extraction
@@ -128,8 +128,8 @@ class DocumentProcessingCrew:
             1. Analyze each table structure
             2. Identify headers and data types
             3. Look for captions if any
-            3. Create meaningful descriptions for each table
-            4. Structure data for easy querying
+            4. Create meaningful descriptions for each table
+            5. Structure data for easy querying
             
             Return structured JSON with table analysis and metadata.
             """,
@@ -168,7 +168,7 @@ class DocumentProcessingCrew:
             }
     
     def _chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
-        """Split text into chunks of specified size"""
+        """split text into chunks of specified size"""
         words = text.split()
         chunks = []
         current_chunk = []
